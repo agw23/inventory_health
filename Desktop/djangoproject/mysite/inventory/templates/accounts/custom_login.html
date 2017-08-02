@@ -1,0 +1,75 @@
+
+{% extends 'base.html' %}
+<html lang="en">
+  {% block body %}
+
+    <title>Juniper Inventory Devices</title>
+
+
+      <style>
+    .jumbotron {
+        background-color: #778899; /* Orange */
+        color: #ffffff;
+    }
+
+    .center{
+            text-align: center;
+
+
+    }
+    </style>
+
+
+      <div class="jumbotron">
+          <div class="center">
+
+            <h1>Custom Login</h1>
+            <p>Enter your credentials to view inventory. *Please note that these are case-sensitive.</p>
+          </div>
+
+    </div>
+
+      <div class="container fluid">
+          <div class="center">
+              <div>
+                <form method="post">
+                {%csrf_token %}
+                {{ form.as_p }}
+                    <button type="submit" class="btn btn-primary">
+                    <span class="glyphicon glyphicon-user" aria-hidden="true"></span>Sign-in
+                    </button>
+
+                </form>
+              </div>
+
+           <div class="col-xs-3">
+
+
+                    <div class="checkbox">
+                        <input type="checkbox" value="remember-me"> Remember me
+                    </div>
+            </div>
+
+
+      </div>
+
+        </div>
+      </form>
+
+    </div> <!-- /container -->
+
+  {% endblock %}
+
+</html>
+
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script>window.jQuery || document.write('<script src="../../assets/js/vendor/jquery.min.js"><\/script>')</script>
+    <script src="../../dist/js/bootstrap.min.js"></script>
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <script src="../../assets/js/ie10-viewport-bug-workaround.js"></script>
+  </body>
+</html>
