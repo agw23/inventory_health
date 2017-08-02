@@ -2,13 +2,13 @@ from django.conf.urls import url, include
 from . import views
 from django.contrib.auth.views import login, logout
 from .views import HomeView
-from .views import LoginView
 from .views import AutoDiscoverView
 from .views import SingleDeviceView
 from .views import Graph
 from .views import BarGraph
 from .views import ByOSCount
 from .views import getDiagnosticsOptics
+from .views import get_credentials
 from .views import HorizontalChartSystemAlarms
 
 from django.views.generic import TemplateView
@@ -16,8 +16,7 @@ from django.views.generic import TemplateView
 
 urlpatterns = [
     #: /inventory/
-
-    url(r'^$', views.index, name='home'),
+    url(r'^$', get_credentials.as_view(), name='home'),
 
     url(r'^name/$', views.device, name='name'),
 
@@ -31,8 +30,6 @@ urlpatterns = [
 
     url(r'^graph/$', Graph.as_view() , name='graph'),
 
-    url(r'^custom/$', LoginView.as_view(), name='customlogin'),
-
     url(r'^visualdata/$', Graph.as_view(), name='graph'),
 
     url(r'^filter/$', views.filter, name='filter'),
@@ -43,7 +40,7 @@ urlpatterns = [
 
     url(r'^health/$', BarGraph.as_view(), name='health'),
 
-    url(r'^view/$', views.viewGraph, name='saved'),
+    #url(r'^view/$', views.viewGraph, name='saved'),
 
     url(r'^discover/$', AutoDiscoverView.as_view(), name='discover'),
 

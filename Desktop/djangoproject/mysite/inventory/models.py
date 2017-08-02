@@ -15,7 +15,7 @@ from django import forms
 
 @python_2_unicode_compatible
 class IP(models.Model):
-    IP_address = models.CharField(max_length=20, unique=True,
+    IP_address = models.CharField(max_length=20,
                                   error_messages={'unique': 'Please enter a different IP address.'})
 
     IP_serial = models.CharField(max_length=200, default="00000")

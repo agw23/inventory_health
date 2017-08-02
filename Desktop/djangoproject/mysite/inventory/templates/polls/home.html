@@ -2,6 +2,7 @@
 
 <html lang="en">
 
+{% load staticfiles %}
 
 {% block head %}
 
@@ -19,6 +20,7 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 
+  <link rel="stylesheet" type="text/css" href="{% static 'css/add.css' %}" />
 
  <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
@@ -29,38 +31,6 @@
 {% block body %}
 
  <style>
-    #myInput {
-    background-position: 10px 12px; /* Position the search icon */
-    background-repeat: no-repeat; /* Do not repeat the icon image */
-    width: 100%; /* Full-width */
-    font-size: 16px; /* Increase font-size */
-    padding: 12px 20px 12px 40px; /* Add some padding */
-    border: 1px solid #ddd; /* Add a grey border */
-    margin-bottom: 12px; /* Add some space below the input */
-}
-
-    #myTable {
-    border-collapse: collapse; /* Collapse borders */
-    width: 100%; /* Full-width */
-    border: 1px solid #ddd; /* Add a grey border */
-    font-size: 18px; /* Increase font-size */
-}
-
-    #myTable th, #myTable td {
-    text-align: left; /* Left-align text */
-    padding: 12px; /* Add padding */
-}
-
-    #myTable tr {
-    /* Add a bottom border to all table rows */
-    border-bottom: 1px solid #ddd;
-}
-
-    #myTable tr.header, #myTable tr:hover {
-    /* Add a grey background color to the table header and on hover */
-    background-color: #f1f1f1;
-}
-
   body {
       font-family: 'Lato', sans-serif;
    }
@@ -73,11 +43,11 @@
     <style>
         h1{
         text-align: center;
+        color: #ffffff;
 
          body {
         font-family: 'Lato', sans-serif;
         }
-
 
     </style>
 
@@ -88,20 +58,21 @@
     </p>
     <form method="post">
         {% csrf_token %}
+
         {{ addForm.as_table }}
 
-        {{ register.as_table }}
+        {{ login.as_p }}
+
         <br>
-    <button type="submit" class="btn btn-primary btn-lg btn-block">Add</button>
+    <button type="submit" class="btn btn-secondary btn-lg btn-block">Add</button>
+
     </form>
-
-
 
     <br>
 
      <form method="get" action="/inventory/saved/">
 
-      <button type="submit" class="btn btn-primary btn-lg btn-block">View Saved Results</button>
+      <button type="submit" class="btn btn-secondary btn-lg btn-block">View Saved Results</button>
 
      </form>
 

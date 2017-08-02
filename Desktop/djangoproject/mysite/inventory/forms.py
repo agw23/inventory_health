@@ -21,35 +21,20 @@ class AddForm(forms.ModelForm):
         model = IP
         fields = ('IP_address',)
 
-        exclude = ['IP_serial', 'version', 'model', 'uptime', 'IP_address_auto', 'password',]
 
+        exclude = ['IP_serial', 'version', 'model', 'uptime', 'IP_address_auto', 'username', 'password',]
 
+class Login(forms.ModelForm):
+    username = forms.HiddenInput()
 
-class Register(forms.ModelForm):
-    username = forms.CharField(widget=forms.TextInput(
-                                 attrs ={
-                                     'class': 'form-control',
-
-
-                               }
-    ))
-
-    password = forms.CharField(widget=forms.PasswordInput(
-        attrs={
-            'class': 'form-control',
-
-        }
-    ))
+    password = forms.HiddenInput()
 
     class Meta:
 
         model = IP
-        fields = ('username', 'password',)
+        widgets = {'username': forms.HiddenInput(), 'password': forms.HiddenInput()}
 
         exclude = ['IP_serial', 'version', 'model', 'uptime', 'IP_address_auto', 'IP_address']
-
-
-
 
 
 class GraphData(forms.ModelForm):

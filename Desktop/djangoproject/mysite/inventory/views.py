@@ -13,8 +13,6 @@ from collections import defaultdict
 import plotly.figure_factory as FF
 from lxml import etree
 
-
-
 import nmap
 from django.template import loader
 from django.http import HttpResponse
@@ -32,46 +30,121 @@ from .models import Graph
 from .forms import GraphData
 
 from .forms import AddForm
-from .forms import Register
+from .forms import Login
 from .forms import AutoDiscover
 from django.views.generic import TemplateView
 
 def index(request):
 
     template = loader.get_template('polls/index.html')
+    C = create_user_data()
+    dict = C.user_data()
+
+
+    dict['username'] = request.POST.get('username')
+    dict['password'] = request.POST.get('global_password')
 
     context = {
-
-
     }
 
     return HttpResponse(template.render(context, request))
 
+
+class get_credentials(TemplateView):
+
+    template_name = 'account/login.html'
+    dict = []
+
+    def get(self, request):
+        login = Login()
+
+        args = {'login': login}
+        return render(request, self.template_name, args)
+
+    def get_details(self, request):
+
+        C = create_user_data()
+        self.dict = C.user_data()
+        self.dict['username'] = request.POST.get('username')
+        self.dict['password'] = request.POST.get('global_password')
+
+        username = self.dict['username']
+        password = self.dict['password']
+
+        request.session['username'] = username # set 'username' in the session
+        request.session['password'] = password  # set 'password' in the session
+
+        return self.dict
+
+    def post(self, request):
+
+        return render(request, 'polls/index.html')
+
+
+class create_user_data():
+        """
+        :param username: username used to authenticate to the endpoint
+        :param password: password used to authenticate to the endpoint
+        :param endpoint_type: type of endpoint
+        """
+        username = None
+        password = None
+        user_credentials = {}
+        set_user_data = {}
+
+        def get_data_from_session(self, request):
+            self.set_user_data = {
+                "username": request.session['username'],  # get 'username' from the session
+                "password": request.session['password'],  # get 'password' from the session
+            }
+
+            return self.set_user_data
+
+
+        def get_username(self):
+
+            return self.set_user_data.get("username")
+
+        def get_password(self):
+
+            return self.set_user_data.get("password")
+
+        def user_data(self):
+            self.user_credentials = {
+            "username": self.username,
+            "password": self.password,
+        }
+            return self.user_credentials
+
+
+
 class HomeView(TemplateView):
     template_name = 'polls/home.html'
 
-    username = None
-    password = None
-
-
     def get(self, request):
         addform = AddForm()
-
-        register = Register()
+        login = Login()
 
         posts = IP.objects.all()
-        args = {'addForm': addform,'details': posts}
+        args = {'addForm': addform, 'login': login, 'details': posts}
         return render(request, self.template_name, args)
+
 
     def post(self, request):
         addform = AddForm(request.POST)
+        login = Login(request.POST)
+
+        CreateUserData = create_user_data()
+
+        username = CreateUserData.get_username()
+        password = CreateUserData.get_password()
 
         if addform.is_valid():
             IPF = addform.save(commit=False)
             text = addform.cleaned_data['IP_address']
             posts = IP.objects.all()
 
-            dev = Device(host=text, user='shanzeh', password='Juniper123!')
+            dev = Device(host=text, user=str(username), password=str(password))
 
         try:
                 dev.open()
@@ -81,12 +154,15 @@ class HomeView(TemplateView):
                 model  = dev.facts['model']
                 uptime = dev.facts['RE0']['up_time']
 
+
                 IPF.IP_serial = serial
                 IPF.version = version
 
                 IPF.model = model
+
                 IPF.uptime = uptime
                 addform.save()
+
 
         except Exception as err:
                 print "Unable to connect to host:,"
@@ -94,55 +170,25 @@ class HomeView(TemplateView):
 
         args = {'addresses': posts,'myForm': addform, 'text': text, 'serial': serial,
                 'version': version, 'model': model,
-                'uptime': uptime}
+                'uptime': uptime, 'login': login}
 
-        return render(request, 'polls/onedevice_results.html', args)
-
-
-class LoginView(TemplateView):
-    template_name = 'accounts/custom_login.html'
-
-    def get(self, request):
-
-        form = Register()
-        args = {'form': form}
-
-        return render(request, self.template_name, args)
-
-    def set_password(self, X):
-
-        self.password = X
-
-
-    def getPassword(self):
-
-        return self.password
-
-    def post(self, request):
-        regform = Register(request.POST)
-
-        print ("Im in regform.valid")
-
-        if regform.is_valid():
-
-            self.password = regform.cleaned_data['password']
-            print ("login view password!")
-
-            self.set_password(self.password)
-
-            username = regform.cleaned_data['username']
-
-        return render(request, 'polls/index.html')
+        return render(request, 'accounts/add_form.html', args)
 
 
 
 def register(request):
 
     if request.method == 'POST':
-        form = Register(request.POST)
+        form = Login(request.POST)
         if form.is_valid():
             username = form.cleaned_data.get('username')
-            raw_password = form.cleaned_data.get('password1')
+            password = form.cleaned_data.get('password')
+
+            Login.username = username
+            Login.password = password
+            print Login.username
+            print Login.password
+
             form.save()
         return redirect('/inventory/')
 
@@ -170,7 +216,10 @@ class SingleDeviceView(TemplateView):
 
                 ips_checked = request.POST.get("retrieve")
 
-                dev = Device(host=ips_checked, user='shanzeh', password='Juniper123!')
+                username = request.session['username']  # get 'username' from the session
+                password = request.session['password']  # get 'password' from the session
+
+                dev = Device(host=ips_checked, user=str(username), password=str(password))
 
                 try:
                     dev.open()
@@ -296,6 +345,11 @@ class Graph(TemplateView):
 
         if request.method == "POST":
 
+            CreateUserData = create_user_data()
+
+            username = CreateUserData.get_username()
+            password = CreateUserData.get_password()
+
             self.address = request.POST.get("graph")
 
             if viewData.is_valid():
@@ -303,7 +357,7 @@ class Graph(TemplateView):
 
             Graph.IP_address = self.address
 
-            self.dev = Device(host=self.address, user='shanzeh', password='Juniper123!')
+            self.dev = Device(host=self.address, user=str(username), password=str(password))
             context = self.get_context_data()
 
             return render(request, 'polls/graph.html', context)
@@ -591,6 +645,35 @@ class HorizontalChartSystemAlarms(TemplateView):
 
     template_name = 'polls/alarm_count.html'
 
+    def post(self, request):
+        viewData = GraphData(request.POST)
+
+        if request.method == "POST":
+
+            CreateUserData = create_user_data()
+
+            username = CreateUserData.get_username()
+            password = CreateUserData.get_password()
+
+            self.address = request.POST.get("graph")
+
+            if viewData.is_valid():
+                self.address = viewData.cleaned_data['IP_address']
+
+            Graph.IP_address = self.address
+
+            self.dev = Device(host=self.address, user=str(username), password=str(password))
+            context = self.get_context_data()
+
+            return render(request, 'polls/graph.html', context)
+
+
+    def get_data(self, request):
+
+        CreateUserData = create_user_data()
+        print CreateUserData.get_password()
+        print CreateUserData.get_username()
+
     """Getter for getting statistics regarding alarm information. Returns a list with the alarms
         for each IP."""
     def get_statistics(self):
@@ -598,6 +681,7 @@ class HorizontalChartSystemAlarms(TemplateView):
         for self.d in self.data:
 
             self.system_alarm_count.append(self.d.IP_address)
+
 
             self.dev = Device(host=str(self.d.IP_address), user='shanzeh', password='Juniper123!')
 
@@ -620,8 +704,14 @@ class HorizontalChartSystemAlarms(TemplateView):
     def get_description(self):
 
         for self.d in self.data:
-            self.dev = Device(host=str(self.d.IP_address), user='shanzeh', password='Juniper123!')
+            CreateUserData = create_user_data()
 
+            username = CreateUserData.get_username()
+            password = CreateUserData.get_password()
+
+            print username
+            print password
+            self.dev = Device(host=str(self.d.IP_address), user='shanzeh',password='Juniper123!')
             temp = HorizontalChartSystemAlarms()
 
             try:
@@ -717,6 +807,7 @@ class getDiagnosticsOptics(TemplateView):
     def get(self, request):
 
         try:
+
             dev = Device(host='10.8.2.15', user='shanzeh', password='Juniper123!')
 
             dev.open()
