@@ -40,8 +40,6 @@ urlpatterns = [
 
     url(r'^health/$', BarGraph.as_view(), name='health'),
 
-    #url(r'^view/$', views.viewGraph, name='saved'),
-
     url(r'^discover/$', AutoDiscoverView.as_view(), name='discover'),
 
     url(r'^single/$', SingleDeviceView.as_view(), name='single'),

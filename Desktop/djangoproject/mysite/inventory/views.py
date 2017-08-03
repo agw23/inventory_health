@@ -9,7 +9,6 @@ import plotly.graph_objs as go
 import plotly.tools as tls
 from plotly.graph_objs import *
 import numpy as np
-from collections import defaultdict
 import plotly.figure_factory as FF
 from lxml import etree
 
@@ -52,7 +51,7 @@ def index(request):
 
 class get_credentials(TemplateView):
 
-    template_name = 'account/login.html'
+    template_name = 'accounts/login.html'
     dict = []
 
     def get(self, request):
@@ -78,36 +77,19 @@ class get_credentials(TemplateView):
 
     def post(self, request):
 
+        self.get_details(request)
+
         return render(request, 'polls/index.html')
 
 
 class create_user_data():
         """
-        :param username: username used to authenticate to the endpoint
-        :param password: password used to authenticate to the endpoint
-        :param endpoint_type: type of endpoint
+        :param username: username used to authenticate
+        :param password: password used to authenticate
         """
         username = None
         password = None
         user_credentials = {}
-        set_user_data = {}
-
-        def get_data_from_session(self, request):
-            self.set_user_data = {
-                "username": request.session['username'],  # get 'username' from the session
-                "password": request.session['password'],  # get 'password' from the session
-            }
-
-            return self.set_user_data
-
-
-        def get_username(self):
-
-            return self.set_user_data.get("username")
-
-        def get_password(self):
-
-            return self.set_user_data.get("password")
 
         def user_data(self):
             self.user_credentials = {
@@ -134,10 +116,8 @@ class HomeView(TemplateView):
         addform = AddForm(request.POST)
         login = Login(request.POST)
 
-        CreateUserData = create_user_data()
-
-        username = CreateUserData.get_username()
-        password = CreateUserData.get_password()
+        username = request.session['username']  # get 'username' from the session
+        password = request.session['password']  # get 'password' from the session
 
         if addform.is_valid():
             IPF = addform.save(commit=False)
@@ -186,8 +166,6 @@ def register(request):
 
             Login.username = username
             Login.password = password
-            print Login.username
-            print Login.password
 
             form.save()
         return redirect('/inventory/')
@@ -302,10 +280,10 @@ class AutoDiscoverView(TemplateView):
 
                         port_state = nm[host][protocol][port]['state']
 
-            args = {'devices': hosts, 'singlehost': host,'state': state, 'protocol': protocol, 'port_state':
-            port_state, 'lport': lport, 'port': port, 'auto': auto}
+                args = {'devices': hosts, 'singlehost': host,'state': state, 'protocol': protocol, 'port_state':
+                port_state, 'lport': lport, 'port': port, 'auto': auto}
 
-            return render(request, 'polls/discover_results.html', args)
+                return render(request, 'polls/discover_results.html', args)
 
 
 """
@@ -344,11 +322,8 @@ class Graph(TemplateView):
         viewData = GraphData(request.POST)
 
         if request.method == "POST":
-
-            CreateUserData = create_user_data()
-
-            username = CreateUserData.get_username()
-            password = CreateUserData.get_password()
+            username = request.session['username']  # get 'username' from the session
+            password = request.session['password']  #get 'password' from the session
 
             self.address = request.POST.get("graph")
 
@@ -367,7 +342,6 @@ class Graph(TemplateView):
         try:
             self.dev.open()
             vlanInfo = self.dev.rpc.get_virtual_chassis_adjacency_information()
-            print vlanInfo
 
 
         except Exception as err:
@@ -643,36 +617,22 @@ class HorizontalChartSystemAlarms(TemplateView):
 
     data = IP.objects.all()
 
+    username = None
+
+    password = None
+
     template_name = 'polls/alarm_count.html'
 
+
     def post(self, request):
-        viewData = GraphData(request.POST)
 
         if request.method == "POST":
+            self.username = request.session['username']  # get 'username' from the session
+            self.password = request.session['password']  # get 'password' from the session
 
-            CreateUserData = create_user_data()
-
-            username = CreateUserData.get_username()
-            password = CreateUserData.get_password()
-
-            self.address = request.POST.get("graph")
-
-            if viewData.is_valid():
-                self.address = viewData.cleaned_data['IP_address']
-
-            Graph.IP_address = self.address
-
-            self.dev = Device(host=self.address, user=str(username), password=str(password))
             context = self.get_context_data()
 
-            return render(request, 'polls/graph.html', context)
-
-
-    def get_data(self, request):
-
-        CreateUserData = create_user_data()
-        print CreateUserData.get_password()
-        print CreateUserData.get_username()
+        return render(request, 'polls/alarm_count.html', context)
 
     """Getter for getting statistics regarding alarm information. Returns a list with the alarms
         for each IP."""
@@ -682,8 +642,7 @@ class HorizontalChartSystemAlarms(TemplateView):
 
             self.system_alarm_count.append(self.d.IP_address)
 
-
-            self.dev = Device(host=str(self.d.IP_address), user='shanzeh', password='Juniper123!')
+            self.dev = Device(host=str(self.d.IP_address), user=str(self.username), password=str(self.password))
 
             try:
                 self.dev.open()
@@ -704,13 +663,7 @@ class HorizontalChartSystemAlarms(TemplateView):
     def get_description(self):
 
         for self.d in self.data:
-            CreateUserData = create_user_data()
 
-            username = CreateUserData.get_username()
-            password = CreateUserData.get_password()
-
-            print username
-            print password
             self.dev = Device(host=str(self.d.IP_address), user='shanzeh',password='Juniper123!')
             temp = HorizontalChartSystemAlarms()
 
@@ -752,13 +705,12 @@ class HorizontalChartSystemAlarms(TemplateView):
 
         self.get_description()
 
-        print self.my_dict.items()
-
         trace1 = go.Bar(x=self.list_alarm_count_,
                         y=self.system_alarm_count,
                         marker=dict(
                             color=['rgb(242,230,255)', 'rgb(229, 204, 225)',
-                                   'rgb(215,179,255)', 'rgb(12, 0, 26)'
+                                   'rgb(215,179,255)', 'rgb(12, 0, 26)',
+                                   'rgb(12, 0, 26)', 'rgb(12, 0, 26)',
                                    ]
                         )
 
@@ -782,15 +734,11 @@ class HorizontalChartSystemAlarms(TemplateView):
                 gridcolor='white'  # set grid color to white
             ),
 
-
        )
 
         fig = go.Figure(data=data, layout=layout)
 
         div = opy.plot(fig, auto_open=False, output_type='div')
-
-
-        print self.my_dict.keys()
 
         context ['items'] = self.my_dict.iteritems()
 
@@ -803,30 +751,56 @@ class getDiagnosticsOptics(TemplateView):
 
     template_name = 'polls/diagnostics_optics.html'
 
+    dev  = None
+    def post(self, request):
 
-    def get(self, request):
+        if request.method == "POST":
+            username = request.session['username']  # get 'username' from the session
+            password = request.session['password']  #get 'password' from the session
+
+
+            self.dev = Device(host='10.8.2.15', user=str(username), password=str(password))
+
+            interface_list = []
+            try:
+                self.dev.open()
+                optics_diagnostics = self.dev.rpc.get_interface_optics_diagnostics_information()
+
+                for interface in optics_diagnostics.findall('physical-interface'):
+                    root = interface.find('optics-diagnostics')
+                    name = interface.find('name').text
+                    interface_list.append(name)
+
+            except:
+                print "Unable to connect to host:,"
+                sys.exit(1)
+
+            args = {'root': root, 'name': name, 'interface_list': interface_list}
+
+            return render(request, self.template_name, args)
+
+
+    def get_data(self, request):
 
         try:
 
-            dev = Device(host='10.8.2.15', user='shanzeh', password='Juniper123!')
+            self.dev.open()
 
-            dev.open()
-
-            optics_diagnostics = dev.rpc.get_interface_optics_diagnostics_information()
+            optics_diagnostics = self.dev.rpc.get_interface_optics_diagnostics_information()
             interface_list = []
             for interface in optics_diagnostics.findall('physical-interface'):
                 root = interface.find('optics-diagnostics')
                 name =  interface.find('name').text
                 interface_list.append(name)
-                print interface_list
 
         except:
             print "Unable to connect to host:,"
             sys.exit(1)
 
-        args = {'root': root, 'name': name, 'interface_list': interface_list}
+        #args = {'root': root, 'name': name, 'interface_list': interface_list}
 
-        return render(request, self.template_name, args)
+
+        #return render(request, self.template_name, args)
 
 
 """Filters by OS Version. It displays inventory according to type
