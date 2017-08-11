@@ -1,0 +1,16 @@
+body {
+  padding-top: 20px;
+  padding-bottom: 20px;
+  background-color: blue;
+}
+
+.navbar {
+  margin-bottom: 20px;
+}
+
+ .center {
+    margin: auto;
+    width: 50%;
+    border: 3px solid green;
+    padding: 10px;
+}
